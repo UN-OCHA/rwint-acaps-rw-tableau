@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta author="Pablo Ibáñez de Elejalde - pibanezdeelejalde@gmail.com">
+
+	<title>WDC - ReliefWeb</title>
+  
+	<link rel="shortcut icon" href="http://www.pabloibz.com/resources/favicon.ico" type="image/x-icon">
+
+	<!-- JQuery -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js" type="text/javascript"></script>
+	
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+</head>
+<body>
+	<div class="container">
+		<h1>ReliefWeb Tableau WDC</h1>
+		
+		<div class="alert alert alert-info row">
+
+			<a href="./disasters.html" class="btn btn-primary btn-lg active col-md-3 col-sm-3 col-xs-12" role="button"><span>DISASTERS WDC</span></a>
+			<div class="description col-md-9 col-sm-9 col-xs-0">
+				This Web Data Connector requests a set of <strong>Disasters</strong> that ocurred by country and between dates defined by the user.</br>
+				Data is extracted from the <a href="http://reliefweb.int/help/api/advanced">ReliefWeb API</a>.
+			</div>
+		</div>
+		<div class="alert alert alert-info row">
+
+			<a href="./jobs.html" class="btn btn-primary btn-lg active col-md-3 col-sm-3 col-xs-12" role="button"><span>JOBS WDC</span></a>
+			<div class="description col-md-9 col-sm-9 col-xs-0">
+				This Web Data Connector requests a set of <strong>Jobs</strong> that occurred by country and between dates defined by the user.</br>
+				Data is extracted from the <a href="http://reliefweb.int/help/api/advanced">ReliefWeb API</a>.
+			</div>
+		</div>
+		<div class="alert alert alert-info row">
+			<div id="b1">
+				<a href="./reports.html" class="btn btn-primary btn-lg active col-md-3 col-sm-3 col-xs-12" role="button"><span>REPORTS WDC</span></a>
+				<div id="d3" class="description col-md-9 col-sm-9 col-xs-0">
+					This Web Data Connector requests a set of <strong>Reports</strong> that ocurred by country and between dates defined by the user.
+					Data is extracted from the <a href="http://reliefweb.int/help/api/advanced">ReliefWeb API</a>. Both primary and secondary country of the report are included in the
+					download, which increases the number of requests and the time required to download it. If you are interested only
+					by the primary country, use the <a href="./reports_NC.html" >Report_NC WDC</a> instead.
+				</div>
+			</div>
+			<div id="b2">
+				<a href="./reports_NC.html" class="btn btn-primary btn-lg active col-md-3 col-sm-3 col-xs-12" role="button"><span>REPORTS_NC WDC</span></a>
+				<div class="description col-md-9 col-sm-9 col-xs-0">
+					This Web Data Connector requests a set of <strong>Reports</strong> that ocurred by country and between dates defined by the user.</br>
+					Data is extracted from the <a href="http://reliefweb.int/help/api/advanced">ReliefWeb API</a>.
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="attribution">
+		<a href="#" ><img src="img/acaps-logo.png" height="60px" style="float: right;"></a></br>
+		<span style="font-size: 10px; float:right; text-align: right;">Pablo Ib&aacute&ntilde;ez de Elejalde</br><a title="pibanezdeejalde@gmail.com" href="mailto:pibanezdeejalde@gmail.com" style="text-decoration: none;">pibanezdeejalde@gmail.com</a></span>
+	</div>
+</body>
+<style>
+	body{
+		padding: 10px;
+	}
+	h1{
+		text-align: center;
+		padding-bottom: 16px;
+		font-weight: bold;
+		color: #286090;
+	}
+	.btn{
+		height: 45px;
+		vertical-align: middle;
+		padding-top: 10px;
+		margin-bottom: 10px;
+	}
+	.description{
+		padding-left: 25px;
+		font-size: 12px;
+	}
+	span{
+		font-size: 16px;
+	}
+	#d3{
+		padding-bottom: 20px;
+	}
+	#attribution{
+		position: relative;
+		margin-bottom: 10px;
+		z-index: 9;
+		float: right;
+	}
+	
+	@media screen and (min-width: 760px) {
+		#main{
+			position:relative;
+		}
+		#attribution{
+			position:fixed;
+			bottom: 0px; 
+			right: 10px; 
+			z-index: 9;
+		}
+	}
+</style>
+</head>

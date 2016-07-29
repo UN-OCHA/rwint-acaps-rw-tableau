@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta author="Pablo Ibáñez de Elejalde - pibanezdeelejalde@gmail.com">
+
+	<title>Disasters - WDC - ReliefWeb</title>
+
+	<link rel="shortcut icon" href="http://www.pabloibz.com/resources/favicon.ico" type="image/x-icon">
+
+	<!-- JQuery -->
+	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js" type="text/javascript"></script> -->
+	<!-- Tableau -->
+	<!-- <script src="https://public.tableau.com/javascripts/api/tableauwdc-1.1.0.js" type="text/javascript"></script> -->
+	
+	<!-- Bootstrap -->
+	<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></script> -->
+	<!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> -->
+	<!-- Bootstrap-select -->
+	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css"> -->
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script> -->
+  
+	<!-- -------------------------------------- -->
+	
+	<!-- JQuery -->
+	<script src="./js/jquery-1.12.0.min.js" type="text/javascript"></script>
+	
+	<!-- Bootstrap -->
+	<link rel="stylesheet" href="./css/bootstrap.min.css"></script>
+	<script src="./js/bootstrap.min.js" type="text/javascript"></script>
+	<!-- Bootstrap-select -->
+	<link rel="stylesheet" href="./css/bootstrap-select.min.css">
+	<script src="./js/bootstrap-select.min.js" type="text/javascript"></script>
+	
+	<!-- Tableau -->
+	<script src="https://public.tableau.com/javascripts/api/tableauwdc-1.1.0.js" type="text/javascript"></script>
+	
+	<script>
+		var dataStr = '';
+		var lastRecordToken = 0;
+		var connectionURL = "http://api.rwlabs.org:80/v1/disasters?limit=1000&offset=" + lastRecordToken + "&profile=full&preset=analysis";
+		
+		
+		function calculateResources(){
+			var initDate = $('#initDate').val();
+			var endDate = $('#endDate').val();
+
+			var fromD = initDate + "T00:00:00+00:00";
+			var toD = endDate + "T00:00:00+00:00";
+			
+			var data = {
+				"filter": {
+				  "operator": "AND",
+				  "conditions": [
+					{
+					  "field": "date.created",
+					  "value": {
+						"from": "2015-01-01T00:00:00+00:00",
+						"to": "2015-01-15T00:00:00+00:00"
+					  }
+					},
+					{
+					  "field": "country.iso3",
+					  "value": "-",
+					  "operator": "OR"
+					}
+				  ]
+				},
+				"sort": ["id:asc"]
+			};
+			
+			//Modify the data object with the dates defined in the text boxes
+			data.filter.conditions[0].value.from = fromD;
+			data.filter.conditions[0].value.to = toD;
+			
+			data.filter.conditions[1].value = $('#country').val();
+			
+			//If not country selected, remove the filter by country
+			if($('#country').val() == null){
+				delete data.filter.conditions.splice(1,1);
+				delete data.filter.operator;
+			}
+
+			//If not dates selected, remove the filter by date
+			if($('#initDate').val() == "" && $('#endDate').val() == ""){
+				delete data.filter.conditions.splice(0,1);
+				delete data.filter.operator;
+			}
+			
+			//If any filter defined, remove the filtering
+			if($('#country').val() == null && ($('#initDate').val() == "" && $('#endDate').val() == "")){
+				delete data.filter;
+			}
+			
+			//Converts the JSON object to string
+			dataStr = JSON.stringify(data);
+			
+			//Run the query in order to know the total amount of records
+			$.ajax({
+				type: "POST",
+				url: connectionURL, 
+				data: dataStr,
+				dataType: 'json',
+				success: function(result){
+					//Total number of results
+					var totalCount = result.totalCount;
+					$('#totalCount').text(totalCount);
+					//Number of requests needed
+					var iterations = Math.ceil(parseInt(result.totalCount)/1000);
+					$('#iterations').text(iterations);
+					//Estimation of the time needed to run the query
+					var secsPerRequest = 15;
+					$('#time').text(Math.ceil((iterations * secsPerRequest) / 60));
+					
+					$("body").css("cursor", "default");
+					
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					// If the connection fails, log the error and return an empty set.
+					tableau.log("Connection error: " + xhr.responseText + "\n" + thrownError);
+					tableau.abortWithError("Error while trying to connect to the ReliefWeb data source.");
+				}
+			});
+			
+
+			var countryList = $('#country').val();
+			if(countryList == null) countryList = "All Countries";
+			
+			if($('#initDate').val() == "" && $('#endDate').val() == ""){
+				//Defines the name of the connection
+				tableau.connectionName = 'Disasters in ' + countryList;
+			}else{
+				//Defines the name of the connection
+				tableau.connectionName = 'Disasters (' + initDate + ' to ' + endDate + ') in ' + countryList;
+			}
+			
+		}
+	</script>
+  
+  
+	<script type="text/javascript">
+
+		var myConnector = tableau.makeConnector();
+
+		//Fields definition
+		myConnector.getColumnHeaders = function() {
+			var fieldNames = [];
+			var fieldTypes = [];
+			
+			fieldNames.push('href');fieldTypes.push('string');
+			fieldNames.push('id');fieldTypes.push('string');
+			fieldNames.push('name');fieldTypes.push('string');
+			fieldNames.push('description');fieldTypes.push('string');
+			fieldNames.push('status');fieldTypes.push('string');
+			fieldNames.push('date');fieldTypes.push('date');
+			fieldNames.push('glide');fieldTypes.push('string');
+
+			fieldNames.push('primary country name');fieldTypes.push('string');
+			fieldNames.push('primary country iso3');fieldTypes.push('string');
+			fieldNames.push('primary country longitude');fieldTypes.push('float');
+			fieldNames.push('primary country latitude');fieldTypes.push('float');
+
+			fieldNames.push('primary type name');fieldTypes.push('string');
+			fieldNames.push('primary type code');fieldTypes.push('string');
+
+			fieldNames.push('country name');fieldTypes.push('string');
+			fieldNames.push('country iso3');fieldTypes.push('string');
+			fieldNames.push('country latitude');fieldTypes.push('float');
+			fieldNames.push('country longitude');fieldTypes.push('float');
+
+			fieldNames.push('type name');fieldTypes.push('string');
+			fieldNames.push('type code');fieldTypes.push('string');
+			fieldNames.push('url');fieldTypes.push('string');
+			fieldNames.push('current');fieldTypes.push('bool');
+
+			tableau.headersCallback(fieldNames, fieldTypes);
+
+		}
+
+		var hasMoreData = true;
+		var firstTime = true;
+		var totalNumberOfRecords;
+
+		myConnector.getTableData = function(lastRecordToken) {
+			
+			var dataToReturn = [];  //Array that stores the data obtained from the request
+
+			if(lastRecordToken.length == 0){
+				//If lastRecordToken is empty
+				lastRecordToken = 0;
+			}else{
+				lastRecordToken = parseInt(lastRecordToken);
+			}
+
+			
+			var connectionURL = "http://api.rwlabs.org:80/v1/disasters?limit=1000&offset=" + lastRecordToken + "&profile=full&preset=analysis";
+																										
+			var dataStr = tableau.connectionData;
+
+			$.ajax({
+				type: "POST",
+				url: connectionURL, 
+				data: dataStr,
+				async: false,
+				dataType: 'json',
+				success: function(result){
+					
+					if(firstTime){
+						totalNumberOfRecords = result.totalCount;
+						//totalNumberOfRecords = 1000;
+						firstTime = false;
+					}
+
+					
+					var data = result.data;
+
+					
+					$.each(data, function(i, item) {
+							  
+						lastRecordToken++;
+						var entry = {};
+
+						entry['href'] = item.href;
+						entry['id'] = item.id;
+						entry['name'] = item.fields.name;
+						entry['description'] = item.fields.description;
+						entry['status'] = item.fields.status;
+						entry['date'] = parseDate(item.fields.date.created);
+						entry['glide'] = item.fields.glide;
+						if(data[i].fields.primary_country){
+							entry['primary country name'] = item.fields.primary_country.name;
+							entry['primary country iso3'] = item.fields.primary_country.iso3;
+							if(data[i].fields.primary_country.location){
+								entry['primary country longitude'] = item.fields.primary_country.location[0];
+								entry['primary country latitude'] = item.fields.primary_country.location[1];
+							}
+						}
+						if(data[i].fields.primary_type){
+							entry['primary type name'] = item.fields.primary_type.name;
+							entry['primary type code'] = item.fields.primary_type.code;
+						}
+						entry['url'] = item.fields.url;
+						entry['current'] = item.fields.current;
+
+						getCountry(i,entry);
+					});
+
+
+					function getCountry(i,entry){
+						//For each country into the country array 
+						$.each(data[i].fields.country, function(j,item){
+
+							entry['country name'] = item.name;
+							entry['country iso3'] = item.iso3;
+							if(item.location){
+								entry['country longitude'] = item.location[0];
+								entry['country latitude'] = item.location[1];
+							}
+							
+							getType(i,entry);
+
+						});
+						
+						if(!data[i].fields.country){
+							//If there's not countries in the array
+							getType(i,entry);
+						}
+					}
+
+					function getType(i,entry){
+						//For each type into the type array
+						$.each(data[i].fields.type, function(j,item){
+
+							entry['type name'] = item.name;
+							entry['type code'] = item.code;
+							var entrySaved = jQuery.extend({}, entry);
+							dataToReturn.push(entrySaved);
+						});
+						
+						if(!data[i].fields.type){
+							//If there's not types in the array
+							var entrySaved = jQuery.extend({}, entry);
+							dataToReturn.push(entrySaved);
+						}
+					}
+							
+					
+					if(lastRecordToken >= totalNumberOfRecords){
+						//If has been reached the total number of records
+						hasMoreData = false;
+					}
+
+					tableau.dataCallback(dataToReturn, lastRecordToken.toString(), hasMoreData);
+
+					function parseDate(datetime){
+						var date = datetime.substring(0,10);
+						return date;
+					}
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					// If the connection fails, log the error and return an empty set.
+					tableau.log("Connection error: " + xhr.responseText + "\n" + thrownError);
+					tableau.abortWithError("Error while trying to connect to the ReliefWeb data source. Data unreachable.");
+				}
+			});
+		}
+
+		tableau.registerConnector(myConnector);
+
+
+		myConnector.setData = function(dataStr) {
+				tableau.connectionData = dataStr;
+		};
+
+
+    $(document).ready(function() {
+
+			populateCountry();
+	   
+			$("#submit").click(function() {
+										console.log("illamada submit");
+
+					myConnector.setData(dataStr);
+					tableau.submit();
+
+			});
+      
+			$("#check").click(function() {
+
+				if(validateDates($('#initDate').val(),$('#endDate').val()) == true){
+
+					//Shows the spin in the cursor
+					$("body").css("cursor", "wait");
+
+					//Runs the query in order to know the amount od elements will returns the request
+					calculateResources();
+					$("#warning").show();
+					$("#submit").prop('disabled', false);
+				}
+
+			});
+        
+			function validateDates(from,to){
+				var valid = true;
+
+				var re = /^\d{4}-\d{1,2}-\d{1,2}$/;
+
+				if(!from.match(re) && from != ""){
+					$('#initDate_group').addClass('has-error');
+					$('#initDate').focus();
+					valid = false;
+				}else{
+					$('#initDate_group').removeClass('has-error');
+				}
+
+				if(!to.match(re) && to != ""){
+					$('#endDate_group').addClass('has-error');
+					$('#endDate').focus();
+					valid = false;
+				}else{
+					$('#endDate_group').removeClass('has-error');
+				}
+
+				return valid;
+			}
+
+		});
+		
+		function populateCountry(){
+			
+			var urlCtry = "http://api.rwlabs.org:80/v1/countries?limit=1000&profile=full&preset=analysis";
+			var dataCtry = {
+				"sort": ["name:asc"]
+			};
+        
+			dataStrCtry = JSON.stringify(dataCtry);
+
+			$.ajax({
+				type: "POST",
+				url: urlCtry, 
+				data: dataStrCtry,
+				dataType: 'json',
+				success: function(result){
+
+					var data = result.data;
+
+					var code = "";
+				  
+					$.each(data, function(i, item) {
+					
+						code += "<option value='" + item.fields.iso3 +"'>" + item.fields.name + "</option>";
+					});
+					
+					$('#country').html(code).selectpicker('refresh');
+					
+				}
+			});
+		}
+	
+	</script>
+</head>
+<body>
+    <div id='main'>
+      <form accept-charset="UTF-8" class="sandbox" role="form">
+				<div id="attribution">
+					<a href="http://www.acaps.org/" ><img src="img/acaps-logo.png" height="60px" style="float: right;"></a></br>
+					<span style="font-size: 10px; float:right; text-align: right;">Pablo Ib&aacute&ntilde;ez de Elejalde</br><a title="pibanezdeejalde@gmail.com" href="mailto:pibanezdeejalde@gmail.com" style="text-decoration: none;">pibanezdeejalde@gmail.com</a></span>
+				</div>
+			
+				<div id="description" class="col-sm-12 col-xs-12 alert alert-info row description">
+					<p>
+						This Web Data Connector requests a set of <strong>Disasters</strong> that ocurred by country and between dates defined by the user.</br>
+						Data is extracted from the <a href="http://reliefweb.int/help/api/advanced">ReliefWeb API</a>. Some fields, as Country and Type, can take multiple values for the
+						same Disaster. This has been solved with the <strong>1 to n</strong> approach. 
+					</p>
+				</div>
+
+				<form id="filtersForm" class="col-sm-8 row">
+					<label>
+						Select country:
+					</label></br>
+					<div id="countriesForm" class="row">
+						<div class="form-group col-sm-4" id="country_group">
+							<label for="country">Country</label>
+							<select multiple class="form-control selectpicker" id="country" data-actions-box="true"></select></br>
+							<span class="small text-info"> * if nothing selected. Filter by country is not considered.</span>
+						</div>
+					</div>
+
+					<label>
+						Insert valid dates YYYY-MM-DD format:
+					</label></br>
+					<div id="datesForm" class="row">
+						<div class="form-group col-sm-2" id="initDate_group">
+							<label for="initDate">From</label>
+							<input class="form-control" type="text" id="initDate" value="" placeholder="yyyy-mm-dd">
+						</div>
+						<div class="form-group col-sm-2" id="endDate_group">
+							<label for="endDate">To</label>
+							<input class="form-control " type="text" id="endDate" value="" placeholder="yyyy-mm-dd">
+						</div>
+						<div class="form-group col-sm-3">
+							<input class="btn btn-primary btn-sm" id="check" name="check" type="button" value="Check resources">
+						</div>
+					</div>
+				</form>
+			
+        
+				<div id="warning" class="col-sm-offset-4 col-sm-6 alert alert-warning row" >
+					The ReliefWeb API has a limit of 1000 requests per day.</br>
+					The total number of records requested is:  <span id="totalCount" class="bold">?????</span></br>
+					This will use <span id="iterations" class="bold">???</span> requests.</br>
+					Estimated time of execution: <span id="time" class="bold">??</span> minutes.
+				</div>
+
+				<div class=" col-sm-12 row">
+					<input class="btn btn-success btn-md" id="submit" name="submit" type="button" value="Send query" disabled>
+				</div>
+
+      </form>
+    </div>
+	
+    <style>
+			body{
+				padding: 20px;
+			}
+			#warning{
+				color: red;
+				margin-left: 0px;
+				display: none;
+			}
+			.bold{
+				font-weight: bold;
+			}
+			#datatypes{
+				padding-left: 20px;
+			}
+			#check{
+				margin-top: 27px;
+			}
+			#submit{
+				margin-bottom: 20px;
+			}
+			.dropdown-toggle:disabled, .dropdown-toggle:disabled:hover {
+				background-color: #eee;
+			}
+			#main{
+				position:relative;
+			}
+			#attribution{
+				position:absolute;
+				bottom: 5px; 
+				right: 10px; 
+				z-index: 9;
+			}
+			@media screen and (min-width: 760px) {
+				#main{
+					position:relative;
+				}
+				#attribution{
+					position:fixed;
+					bottom: 5px; 
+					right: 10px; 
+					z-index: 9;
+				}
+			}
+			#countriesForm, #datesForm, #warning{
+				margin-left: 5px;
+			}
+			.description{
+				margin-left: 0px;
+			}
+    </style>
+</body>
+</html>
