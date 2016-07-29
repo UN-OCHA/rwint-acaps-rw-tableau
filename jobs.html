@@ -38,7 +38,7 @@
 	<script>
 		var dataStr = '';
 		var lastRecordToken = 0;
-		var connectionURL = "http://api.rwlabs.org:80/v1/jobs?limit=1000&offset=" + lastRecordToken + "&profile=full&preset=analysis";
+		var connectionURL = "http://api.reliefweb.int:80/v1/jobs?appname=acaps-rw-tableau&limit=1000&offset=" + lastRecordToken + "&profile=full&preset=analysis";
 		
 		function calculateResources(){
 			var initDate = $('#initDate').val();
@@ -198,7 +198,7 @@
 				lastRecordToken = parseInt(lastRecordToken);
 			}
 
-			var connectionURL = "http://api.rwlabs.org:80/v1/jobs?limit=1000&offset=" + lastRecordToken + "&profile=full&preset=analysis";
+			var connectionURL = "http://api.reliefweb.int:80/v1/jobs?appname=acaps-rw-tableau&limit=1000&offset=" + lastRecordToken + "&profile=full&preset=analysis";
 			var dataStr = tableau.connectionData;
         
 
@@ -435,7 +435,7 @@
 		
 		
 		function populateCountry(){
-			var urlCtry = "http://api.rwlabs.org:80/v1/countries?limit=1000&profile=full&preset=analysis";
+			var urlCtry = "http://api.reliefweb.int:80/v1/countries?appname=acaps-rw-tableau&limit=1000&profile=full&preset=analysis";
 			var dataCtry = {
 				"sort": ["name:asc"]
 			};
